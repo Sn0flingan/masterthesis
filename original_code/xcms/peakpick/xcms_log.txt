@@ -1,0 +1,10 @@
+[1] "xcms loaded correctly"
+ [1] "Found the file All_4_Pools_10.mzXML" "Found the file All_4_Pools_11.mzXML"
+ [3] "Found the file All_4_Pools_14.mzXML" "Found the file All_4_Pools_15.mzXML"
+ [5] "Found the file All_4_Pools_17.mzXML" "Found the file All_4_Pools_18.mzXML"
+ [7] "Found the file All_4_Pools_2.mzXML"  "Found the file All_4_Pools_3.mzXML" 
+ [9] "Found the file All_4_Pools_6.mzXML"  "Found the file All_4_Pools_7.mzXML" 
+179:555 229:1184 279:1910 329:2741 379:3559 429:4363 479:5118 529:5799 579:6435 629:7096 679:7607 729:8118 779:8629 829:9082 879:9507 
+[1] "Took 498.12 to scan 1 sample"  "Took 280.63 to scan 1 sample" 
+[3] "Took 874.531 to scan 1 sample" "Took 0 to scan 1 sample"      
+[5] "Took 0 to scan 1 sample"      

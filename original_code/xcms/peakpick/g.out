@@ -1,0 +1,721 @@
+mod: loaded OpenMPI 1.4.5, compiled with gcc4.8 (found in /opt/openmpi/1.4.5gcc4.8/)
+
+R version 3.3.2 (2016-10-31) -- "Sincere Pumpkin Patch"
+Copyright (C) 2016 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> #Load packages
+> if(require("xcms")) {
++     print("xcms loaded correctly")
++ } else {
++     source("https://bioconductor.org/biocLite.R")
++     biocLite("xcms")
++     #install.packages("xcms")
++     if(require("xcms")) {
++         print("xcms installed and loaded")
++     } else {
++         stop("could not install xcms")
++     }
++ }
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+[1] "xcms loaded correctly"
+> if(require("BiocParallel")) {
++ } else {
++     source("https://bioconductor.org/biocLite.R")
++     biocLite("BiocParallel")
++     #install.packages("xcms")
++     if(require("BiocParallel")) {
++         print("BiocParallel installed and loaded")
++     } else {
++         stop("could not install BiocParallel")
++     }
++ }
+Loading required package: BiocParallel
+NULL
+> if(require("Rmpi")) {
++     print("Rmpi loaded correctly")
++ } else {
++     install.packages("Rmpi", repos="https://cloud.r-project.org/")
++     if(require("Rmpi")) {
++         print("Rmpi installed and loaded")
++     } else {
++         stop("could not install Rmpi")
++     }
++ }
+Loading required package: Rmpi
+[1] "Rmpi loaded correctly"
+> 
+> 
+> setwd('/proj/p2013014/nobackup/nils_xjob/stef_batch/Obaid_mzml')
+> cdfpath <-"/proj/p2013014/nobackup/nils_xjob/stef_batch/Obaid_mzml"
+> cdffiles <- list.files(cdfpath)
+> cdffiles <- grep("PoolBatch3|PoolBatch4|Thiram|Trichost|Vinblast|Vincrist", cdffiles, perl=TRUE, value=TRUE)
+> print(paste('Found the file',cdffiles, sep=" "))
+ [1] "Found the file PoolBatch3_B3_1.mzML"      
+ [2] "Found the file PoolBatch3_B3_12.mzML"     
+ [3] "Found the file PoolBatch3_B3_15.mzML"     
+ [4] "Found the file PoolBatch3_B3_16.mzML"     
+ [5] "Found the file PoolBatch3_B3_2.mzML"      
+ [6] "Found the file PoolBatch3_B3_4.mzML"      
+ [7] "Found the file PoolBatch3_B3_5.mzML"      
+ [8] "Found the file PoolBatch3_B3_9.mzML"      
+ [9] "Found the file PoolBatch4_B4_10.mzML"     
+[10] "Found the file PoolBatch4_B4_11.mzML"     
+[11] "Found the file PoolBatch4_B4_15.mzML"     
+[12] "Found the file PoolBatch4_B4_16.mzML"     
+[13] "Found the file PoolBatch4_B4_18.mzML"     
+[14] "Found the file PoolBatch4_B4_3.mzML"      
+[15] "Found the file PoolBatch4_B4_4.mzML"      
+[16] "Found the file PoolBatch4_B4_5.mzML"      
+[17] "Found the file Thiram_B4_Rep1.mzML"       
+[18] "Found the file Thiram_B4_Rep2.mzML"       
+[19] "Found the file Thiram_B4_Rep3.mzML"       
+[20] "Found the file TrichostatinA_B2_Rep1.mzML"
+[21] "Found the file TrichostatinA_B2_Rep2.mzML"
+[22] "Found the file TrichostatinA_B2_Rep3.mzML"
+[23] "Found the file Vinblastine_B1_Rep1.mzML"  
+[24] "Found the file Vinblastine_B1_Rep2.mzML"  
+[25] "Found the file Vinblastine_B1_Rep3.mzML"  
+[26] "Found the file Vincristine_B2_Rep1.mzML"  
+[27] "Found the file Vincristine_B2_Rep2.mzML"  
+[28] "Found the file Vincristine_B2_Rep3.mzML"  
+> 
+> 
+> p_param <- SnowParam(mpi.universe.size()-1, type="MPI");
+> register(p_param) #Is this needed?
+> ptm <- proc.time()
+> sclasses <- c(array("PoolBatch3", 8), array("PoolBatch4", 8), array("Thiram", 3), array("TrichostatinA", 3), array("Vinblastine", 3), array("Vincristine", 3))
+> xset_g <- xcmsSet(cdffiles, sclass=sclasses, method="matchedFilter", BPPARAM=p_param)
+	15 slaves are spawned successfully. 0 failed.
+--------------------------------------------------------------------------
+An MPI process has executed an operation involving a call to the
+"fork()" system call to create a child process.  Open MPI is currently
+operating in a condition that could result in memory corruption or
+other system errors; your MPI job may hang, crash, or produce silent
+data corruption.  The use of fork() (or system() or other calls that
+create child processes) is strongly discouraged.  
+
+The process that invoked fork was:
+
+  Local host:          ti152.uppmax.uu.se (PID 5558)
+  MPI_COMM_WORLD rank: 2
+
+If you are *absolutely sure* that your application will successfully
+and correctly survive a call to fork(), you may disable this warning
+by setting the mpi_warn_on_fork MCA parameter to 0.
+--------------------------------------------------------------------------
+[ti152.uppmax.uu.se:05542] 14 more processes have sent help message help-mpi-runtime.txt / mpi_init:warn-fork
+[ti152.uppmax.uu.se:05542] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+179:550 229:1184 279:1938 329:2762 379:3625 429:4455 479:5257 529:5954 579:6637 629:7325 679:7887 729:8445 779:8958 829:9453 879:9868 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+179:566 229:1211 279:1980 329:2842 379:3672 429:4439 479:5248 529:5996 579:6603 629:7163 679:7557 729:7916 779:8226 829:8505 879:8708 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+179:555 229:1175 279:1908 329:2692 379:3511 429:4283 479:5048 529:5732 579:6385 629:7016 679:7490 729:7994 779:8473 829:8939 879:9354 
+179:557 229:1176 279:1892 329:2672 379:3491 429:4282 479:5054 529:5742 579:6395 629:7028 679:7486 729:7989 779:8455 829:8909 879:9330 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+179:524 229:1124 279:1844 329:2610 379:3470 429:4257 479:4992 529:5653 579:6270 629:6979 679:7646 729:8342 779:8970 829:9521 879:9992 
+179:511 229:1085 279:1771 329:2569 379:3450 429:4240 479:4985 529:5653 579:6258 629:6934 679:7421 729:7881 779:8281 829:8626 879:8990 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+179:535 229:1158 279:1892 329:2642 379:3435 429:4191 479:4939 529:5600 579:6223 629:6873 679:7403 729:8023 779:8549 829:9045 879:9387 
+179:527 229:1189 279:1902 329:2720 379:3594 429:4398 479:5148 529:5843 579:6502 629:7206 679:7772 729:8389 779:8951 829:9518 879:9873 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+179:531 229:1116 279:1812 329:2526 379:3333 429:4091 479:4812 529:5470 579:6068 629:6713 679:7178 729:7664 779:8126 829:8571 879:8951 
+179:522 229:1141 279:1825 329:2552 379:3326 429:4069 479:4770 529:5426 579:6005 629:6698 679:7211 729:7730 779:8209 829:8643 879:8994 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+179:551 229:1162 279:1897 329:2682 379:3510 429:4263 479:5049 529:5740 579:6444 629:7093 679:7618 729:8153 779:8635 829:9049 879:9525 
+179:528 229:1154 279:1894 329:2700 379:3552 429:4410 479:5181 529:5863 579:6537 629:7233 679:7798 729:8404 779:8980 829:9464 879:9892 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+179:550 229:1172 279:1939 329:2789 379:3673 429:4532 479:5358 529:6069 579:6762 629:7462 679:8009 729:8528 779:9014 829:9457 879:9879 
+179:546 229:1192 279:1970 329:2819 379:3700 429:4587 479:5394 529:6102 579:6799 629:7493 679:8096 729:8726 779:9302 829:9806 879:10212 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+179:513 229:1115 279:1843 329:2664 379:3544 429:4351 479:5097 529:5774 579:6418 629:7102 679:7603 729:8171 779:8696 829:9200 879:9540 
+179:521 229:1095 279:1768 329:2487 379:3278 429:4039 479:4768 529:5401 579:6010 629:6649 679:7120 729:7583 779:8004 829:8408 879:8755 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+179:563 229:1160 279:1864 329:2630 379:3354 429:4062 479:4736 529:5371 579:5929 629:6516 679:6946 729:7449 779:7928 829:8405 879:8803 
+179:552 229:1185 279:1900 329:2682 379:3446 429:4150 479:4861 529:5505 579:6081 629:6699 679:7166 729:7697 779:8188 829:8645 879:9062 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+179:560 229:1169 279:1908 329:2678 379:3499 429:4286 479:5058 529:5728 579:6382 629:7026 679:7515 729:8034 779:8527 829:8951 879:9367 
+179:529 229:1146 279:1822 329:2528 379:3308 429:4036 479:4724 529:5373 579:5947 629:6547 679:6938 729:7395 779:7843 829:8281 879:8624 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+179:554 229:1198 279:1929 329:2719 379:3496 429:4274 479:4988 529:5636 579:6190 629:6844 679:7345 729:7906 779:8435 829:8937 879:9295 
+179:539 229:1172 279:1899 329:2696 379:3469 429:4221 479:4939 529:5577 579:6163 629:6830 679:7335 729:7882 779:8390 829:8882 879:9258 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+179:543 229:1135 279:1838 329:2619 379:3346 429:4013 479:4691 529:5305 579:5841 629:6420 679:6842 729:7338 779:7826 829:8288 879:8689 
+179:546 229:1173 279:1891 329:2687 379:3471 429:4215 479:4926 529:5561 579:6133 629:6790 679:7317 729:7869 779:8376 829:8866 879:9250 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+179:554 229:1184 279:1894 329:2679 379:3442 429:4141 479:4860 529:5496 579:6096 629:6710 679:7188 729:7734 779:8208 829:8676 879:9068 
+179:557 229:1187 279:1909 329:2685 379:3443 429:4158 479:4895 529:5537 579:6123 629:6745 679:7230 729:7767 779:8257 829:8719 879:9120 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+179:563 229:1197 279:1968 329:2805 379:3680 429:4542 479:5345 529:6073 579:6773 629:7446 679:7993 729:8529 779:9022 829:9455 879:9890 
+179:545 229:1185 279:1939 329:2782 379:3674 429:4535 479:5358 529:6050 579:6741 629:7443 679:8034 729:8633 779:9184 829:9673 879:10106 
+> time <- proc.time()-ptm
+> print(paste('Took', time[3] , 'to scan samples', sep= " "))
+[1] "Took 1936.679 to scan samples"
+> save("xset_g",file="xset_g.RData" )
+> 
+--------------------------------------------------------------------------
+mpirun has exited due to process rank 0 with PID 5543 on
+node ti152.uppmax.uu.se exiting without calling "finalize". This may
+have caused other processes in the application to be
+terminated by signals sent by mpirun (as reported here).
+--------------------------------------------------------------------------

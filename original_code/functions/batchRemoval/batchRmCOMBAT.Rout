@@ -1,0 +1,66 @@
+
+R version 3.3.1 (2016-06-21) -- "Bug in Your Hair"
+Copyright (C) 2016 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[Previously saved workspace restored]
+
+> #### Runfile to correct for batcheffects
+> #Install
+> #source("https://bioconductor.org/biocLite.R")
+> #biocLite("sva")
+> 
+> #Load libraries
+> library(sva)
+Loading required package: mgcv
+Loading required package: nlme
+This is mgcv 1.8-13. For overview type 'help("mgcv-package")'.
+Loading required package: genefilter
+> 
+> rm(list=ls())
+> setwd("/media/nils/DC30-A7F1/functions-final/functions/batchRemoval")
+> 
+> #Load in data
+> edata = read.csv("data_batch.csv", header=FALSE)
+> batch = read.csv("batch_batch.csv", header=FALSE)
+> batch = as.matrix(batch)
+> batch = as.double(batch)
+> edata = as.matrix(edata)
+> 
+> #Create model for Combat, using only intercept as adjustment variables
+> d <- data.frame(x=array(1,c(length(batch),1)))
+> modcombat = model.matrix(~1,data=d)
+> rm(d)
+> 
+> #Perform Combat batch removal
+> combat_edata = ComBat(dat=edata, batch=batch, mod=modcombat, par.prior=TRUE, prior.plots=FALSE)
+Found 3 batches
+Adjusting for 0 covariate(s) or covariate level(s)
+Standardizing Data across genes
+Fitting L/S model and finding priors
+Finding parametric adjustments
+Adjusting the Data
+> 
+> #Save output
+> write.csv(combat_edata, file = "batchCorr_combat.csv", row.names=FALSE, col.names = FALSE)
+Warning message:
+In write.csv(combat_edata, file = "batchCorr_combat.csv", row.names = FALSE,  :
+  attempt to set 'col.names' ignored
+> 
+> proc.time()
+   user  system elapsed 
+  3.616   0.136   3.998 

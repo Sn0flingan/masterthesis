@@ -1,0 +1,121 @@
+mod: loaded OpenMPI 1.4.5, compiled with gcc4.8 (found in /opt/openmpi/1.4.5gcc4.8/)
+
+R version 3.3.2 (2016-10-31) -- "Sincere Pumpkin Patch"
+Copyright (C) 2016 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> #Load packages
+> if(require("xcms")) {
++     print("xcms loaded correctly")
++ } else {
++     source("https://bioconductor.org/biocLite.R")
++     biocLite("xcms")
++     #install.packages("xcms")
++     if(require("xcms")) {
++         print("xcms installed and loaded")
++     } else {
++         stop("could not install xcms")
++     }
++ }
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+[1] "xcms loaded correctly"
+> if(require("BiocParallel")) {
++ } else {
++     source("https://bioconductor.org/biocLite.R")
++     biocLite("BiocParallel")
++     #install.packages("xcms")
++     if(require("BiocParallel")) {
++         print("BiocParallel installed and loaded")
++     } else {
++         stop("could not install BiocParallel")
++     }
++ }
+Loading required package: BiocParallel
+NULL
+> if(require("Rmpi")) {
++     print("Rmpi loaded correctly")
++ } else {
++     install.packages("Rmpi", repos="https://cloud.r-project.org/")
++     if(require("Rmpi")) {
++         print("Rmpi installed and loaded")
++     } else {
++         stop("could not install Rmpi")
++     }
++ }
+Loading required package: Rmpi
+[1] "Rmpi loaded correctly"
+> 
+> 
+> setwd('/proj/p2013014/nobackup/nils_xjob/stef_batch/Obaid_mzml')
+> cdfpath <-"/proj/p2013014/nobackup/nils_xjob/stef_batch/Obaid_mzml"
+> cdffiles <- list.files(cdfpath)
+> cdffiles <- grep("All_4_Pools_10", cdffiles, perl=TRUE, value=TRUE)
+> print(paste('Found the file',cdffiles, sep=" "))
+[1] "Found the file All_4_Pools_10.mzML"
+> 
+> 
+> #p_param <- SnowParam(mpi.universe.size()-1, type="MPI");
+> #register(p_param) #Is this needed?
+> ptm <- proc.time()
+> xset_a <- xcmsSet(cdffiles, method="matchedFilter")
+179:555 229:1184 279:1910 329:2741 379:3559 429:4363 479:5118 529:5799 579:6435 629:7096 679:7607 729:8118 779:8629 829:9082 879:9507 
+> time <- proc.time()-ptm
+> print(paste('Took', time[3] , 'to scan samples', sep= " "))
+[1] "Took 858.278 to scan samples"
+> #save("xset_a",file="xset_a.RData" )
+> 
+--------------------------------------------------------------------------
+mpirun has exited due to process rank 0 with PID 19297 on
+node ti1.uppmax.uu.se exiting without calling "finalize". This may
+have caused other processes in the application to be
+terminated by signals sent by mpirun (as reported here).
+--------------------------------------------------------------------------

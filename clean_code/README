@@ -1,0 +1,21 @@
+README
+
+All functions are available in "functions" folder
+
+Featext
+	Methods used for feature extraction. XCMS are the xcms functions and the .m files are the binning algorithms
+
+Preprocess
+	Preprocess*
+		Files with pipeline for running several functions
+	load/
+		Contains functions to load in the source data from feature extraction methods.
+	
+batchrm
+	Functions to perform batch removal
+
+Utility
+	Functions to help visualize, sort and filter the data
+
+External
+	External Matlab functions that are used by some functions

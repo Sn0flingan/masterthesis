@@ -1,0 +1,442 @@
+mod: loaded OpenMPI 1.4.5, compiled with gcc4.8 (found in /opt/openmpi/1.4.5gcc4.8/)
+
+R version 3.3.2 (2016-10-31) -- "Sincere Pumpkin Patch"
+Copyright (C) 2016 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> #Functions
+> loadPackage <- function(name, packSource){
++     if(require(name)) {
++         return(paste("loaded ", name, " SUCCESS", sep=""))
++     } else {
++         if(packSource=="biocLite") {
++             source("https://bioconductor.org/biocLite.R")
++             biocLite(name)
++             require(name)
++         } else if(packSource=="rietho") {
++             loadPackage("devtools", "r-cran")
++             library(devtools)
++             install_github(paste("rietho", name, sep="/"))
++             require(name) #might need to be replaced with library instead
++         } else {
++             install.packages(name, repos="https://cloud.r-project.org/")
++             require(name)
++         }
++     }
++ }
+> 
+> #Load packages
+> loadPackage("xcms", "biocLite")
+Loading required package: name
+Bioconductor version 3.4 (BiocInstaller 1.24.0), ?biocLite for help
+BioC_mirror: https://bioconductor.org
+Using Bioconductor 3.4 (BiocInstaller 1.24.0), R 3.3.2 (2016-10-31).
+Installing package(s) ‘xcms’
+trying URL 'https://bioconductor.org/packages/3.4/bioc/src/contrib/xcms_1.50.1.tar.gz'
+Content type 'application/x-gzip' length 1427204 bytes (1.4 MB)
+==================================================
+downloaded 1.4 MB
+
+* installing *source* package ‘xcms’ ...
+** libs
+rm -f massifquant/xcms_massifquant.o massifquant/TrMgr.o massifquant/Tracker.o massifquant/SegProc.o massifquant/DataKeeper.o massifquant/OpOverload.o obiwarp/mat.o obiwarp/vec.o obiwarp/xcms_dynprog.o obiwarp/xcms_lmat.o xcms_obiwarp.o fastMatch.o mzClust_hclust.o mzROI.o util.o xcms.o binners.o
+g++ -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c massifquant/xcms_massifquant.cpp -o massifquant/xcms_massifquant.o
+g++ -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c massifquant/TrMgr.cpp -o massifquant/TrMgr.o
+g++ -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c massifquant/Tracker.cpp -o massifquant/Tracker.o
+g++ -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c massifquant/SegProc.cpp -o massifquant/SegProc.o
+g++ -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c massifquant/DataKeeper.cpp -o massifquant/DataKeeper.o
+g++ -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c massifquant/OpOverload.cpp -o massifquant/OpOverload.o
+g++ -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c obiwarp/mat.cpp -o obiwarp/mat.o
+g++ -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c obiwarp/vec.cpp -o obiwarp/vec.o
+g++ -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c obiwarp/xcms_dynprog.cpp -o obiwarp/xcms_dynprog.o
+g++ -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c obiwarp/xcms_lmat.cpp -o obiwarp/xcms_lmat.o
+g++ -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c xcms_obiwarp.cpp -o xcms_obiwarp.o
+gcc -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c fastMatch.c -o fastMatch.o
+gcc -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c mzClust_hclust.c -o mzClust_hclust.o
+gcc -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c mzROI.c -o mzROI.o
+gcc -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c util.c -o util.o
+gcc -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c xcms.c -o xcms.o
+gcc -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c binners.c -o binners.o
+g++ -shared -L/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/lib -L/usr/local/lib64 -o xcms.so massifquant/xcms_massifquant.o massifquant/TrMgr.o massifquant/Tracker.o massifquant/SegProc.o massifquant/DataKeeper.o massifquant/OpOverload.o obiwarp/mat.o obiwarp/vec.o obiwarp/xcms_dynprog.o obiwarp/xcms_lmat.o xcms_obiwarp.o fastMatch.o mzClust_hclust.o mzROI.o util.o xcms.o binners.o -L/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/lib -lR
+installing to /pica/h1/nilsanli/R/x86_64-pc-linux-gnu-library/3.3/xcms/libs
+** R
+** inst
+** preparing package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded
+* DONE (xcms)
+
+The downloaded source packages are in
+	‘/scratch/12593347/RtmpUIQiYh/downloaded_packages’
+installation path not writeable, unable to update packages: Matrix, mgcv, nlme,
+  survival
+Loading required package: name
+Warning messages:
+1: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘name’
+2: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘name’
+> loadPackage("BiocParallel", "biocLite")
+Loading required package: name
+Bioconductor version 3.4 (BiocInstaller 1.24.0), ?biocLite for help
+BioC_mirror: https://bioconductor.org
+Using Bioconductor 3.4 (BiocInstaller 1.24.0), R 3.3.2 (2016-10-31).
+Installing package(s) ‘BiocParallel’
+trying URL 'https://bioconductor.org/packages/3.4/bioc/src/contrib/BiocParallel_1.8.1.tar.gz'
+Content type 'application/x-gzip' length 624640 bytes (610 KB)
+==================================================
+downloaded 610 KB
+
+* installing *source* package ‘BiocParallel’ ...
+** R
+** inst
+** preparing package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded
+* DONE (BiocParallel)
+
+The downloaded source packages are in
+	‘/scratch/12593347/RtmpUIQiYh/downloaded_packages’
+installation path not writeable, unable to update packages: Matrix, mgcv, nlme,
+  survival
+Loading required package: name
+Warning messages:
+1: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘name’
+2: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘name’
+> loadPackage("Rmpi", "r-cran")
+Loading required package: name
+Installing package into ‘/pica/h1/nilsanli/R/x86_64-pc-linux-gnu-library/3.3’
+(as ‘lib’ is unspecified)
+trying URL 'https://cloud.r-project.org/src/contrib/Rmpi_0.6-6.tar.gz'
+Content type 'application/x-gzip' length 105181 bytes (102 KB)
+==================================================
+downloaded 102 KB
+
+* installing *source* package ‘Rmpi’ ...
+** package ‘Rmpi’ successfully unpacked and MD5 sums checked
+checking for gcc... gcc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether we are using the GNU C compiler... yes
+checking whether gcc accepts -g... yes
+checking for gcc option to accept ISO C89... none needed
+Trying to find mpi.h ...
+Found in /opt/openmpi/1.4.5gcc4.8/include
+Trying to find libmpi.so or libmpich.a ...
+Found libmpi in /opt/openmpi/1.4.5gcc4.8/lib
+checking for orted... yes
+checking for openpty in -lutil... yes
+checking for main in -lpthread... yes
+configure: creating ./config.status
+config.status: creating src/Makevars
+** libs
+gcc -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG -DPACKAGE_NAME=\"\" -DPACKAGE_TARNAME=\"\" -DPACKAGE_VERSION=\"\" -DPACKAGE_STRING=\"\" -DPACKAGE_BUGREPORT=\"\" -DPACKAGE_URL=\"\" -I/opt/openmpi/1.4.5gcc4.8/include  -DMPI2 -DOPENMPI -I/usr/local/include    -fpic  -g -O2  -c Rmpi.c -o Rmpi.o
+gcc -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG -DPACKAGE_NAME=\"\" -DPACKAGE_TARNAME=\"\" -DPACKAGE_VERSION=\"\" -DPACKAGE_STRING=\"\" -DPACKAGE_BUGREPORT=\"\" -DPACKAGE_URL=\"\" -I/opt/openmpi/1.4.5gcc4.8/include  -DMPI2 -DOPENMPI -I/usr/local/include    -fpic  -g -O2  -c conversion.c -o conversion.o
+gcc -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG -DPACKAGE_NAME=\"\" -DPACKAGE_TARNAME=\"\" -DPACKAGE_VERSION=\"\" -DPACKAGE_STRING=\"\" -DPACKAGE_BUGREPORT=\"\" -DPACKAGE_URL=\"\" -I/opt/openmpi/1.4.5gcc4.8/include  -DMPI2 -DOPENMPI -I/usr/local/include    -fpic  -g -O2  -c internal.c -o internal.o
+gcc -shared -L/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/lib -L/usr/local/lib64 -o Rmpi.so Rmpi.o conversion.o internal.o -L/opt/openmpi/1.4.5gcc4.8/lib -lmpi -lutil -lpthread -L/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/lib -lR
+installing to /pica/h1/nilsanli/R/x86_64-pc-linux-gnu-library/3.3/Rmpi/libs
+** R
+** demo
+** inst
+** preparing package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** testing if installed package can be loaded
+* DONE (Rmpi)
+
+The downloaded source packages are in
+	‘/scratch/12593347/RtmpUIQiYh/downloaded_packages’
+Loading required package: name
+Warning messages:
+1: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘name’
+2: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘name’
+> loadPackage("CAMERA", "biocLite")
+Loading required package: name
+Bioconductor version 3.4 (BiocInstaller 1.24.0), ?biocLite for help
+BioC_mirror: https://bioconductor.org
+Using Bioconductor 3.4 (BiocInstaller 1.24.0), R 3.3.2 (2016-10-31).
+Installing package(s) ‘CAMERA’
+trying URL 'https://bioconductor.org/packages/3.4/bioc/src/contrib/CAMERA_1.30.0.tar.gz'
+Content type 'application/x-gzip' length 2170587 bytes (2.1 MB)
+==================================================
+downloaded 2.1 MB
+
+* installing *source* package ‘CAMERA’ ...
+** libs
+gcc -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c fastMatch.c -o fastMatch.o
+gcc -shared -L/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/lib -L/usr/local/lib64 -o CAMERA.so fastMatch.o -L/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/lib -lR
+installing to /pica/h1/nilsanli/R/x86_64-pc-linux-gnu-library/3.3/CAMERA/libs
+** R
+** data
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded
+* DONE (CAMERA)
+
+The downloaded source packages are in
+	‘/scratch/12593347/RtmpUIQiYh/downloaded_packages’
+installation path not writeable, unable to update packages: Matrix, mgcv, nlme,
+  survival
+Loading required package: name
+Warning messages:
+1: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘name’
+2: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘name’
+> loadPackage("rsm", "r-cran")
+Loading required package: name
+Installing package into ‘/pica/h1/nilsanli/R/x86_64-pc-linux-gnu-library/3.3’
+(as ‘lib’ is unspecified)
+trying URL 'https://cloud.r-project.org/src/contrib/rsm_2.8.tar.gz'
+Content type 'application/x-gzip' length 1078524 bytes (1.0 MB)
+==================================================
+downloaded 1.0 MB
+
+* installing *source* package ‘rsm’ ...
+** package ‘rsm’ successfully unpacked and MD5 sums checked
+** R
+** inst
+** preparing package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded
+* DONE (rsm)
+
+The downloaded source packages are in
+	‘/scratch/12593347/RtmpUIQiYh/downloaded_packages’
+Loading required package: name
+Warning messages:
+1: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘name’
+2: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘name’
+> loadPackage("devtools", "r-cran")
+Loading required package: name
+Installing package into ‘/pica/h1/nilsanli/R/x86_64-pc-linux-gnu-library/3.3’
+(as ‘lib’ is unspecified)
+trying URL 'https://cloud.r-project.org/src/contrib/devtools_1.12.0.tar.gz'
+Content type 'application/x-gzip' length 466618 bytes (455 KB)
+==================================================
+downloaded 455 KB
+
+* installing *source* package ‘devtools’ ...
+** package ‘devtools’ successfully unpacked and MD5 sums checked
+** libs
+gcc -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c devtools.c -o devtools.o
+gcc -shared -L/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/lib -L/usr/local/lib64 -o devtools.so devtools.o -L/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/lib -lR
+installing to /pica/h1/nilsanli/R/x86_64-pc-linux-gnu-library/3.3/devtools/libs
+** R
+** inst
+** preparing package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded
+* DONE (devtools)
+
+The downloaded source packages are in
+	‘/scratch/12593347/RtmpUIQiYh/downloaded_packages’
+Loading required package: name
+Warning messages:
+1: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘name’
+2: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘name’
+> loadPackage("IPO", "rietho")
+Loading required package: name
+Loading required package: name
+Installing package into ‘/pica/h1/nilsanli/R/x86_64-pc-linux-gnu-library/3.3’
+(as ‘lib’ is unspecified)
+trying URL 'https://cloud.r-project.org/src/contrib/devtools_1.12.0.tar.gz'
+Content type 'application/x-gzip' length 466618 bytes (455 KB)
+==================================================
+downloaded 455 KB
+
+* installing *source* package ‘devtools’ ...
+** package ‘devtools’ successfully unpacked and MD5 sums checked
+** libs
+gcc -I/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/include -DNDEBUG  -I/usr/local/include    -fpic  -g -O2  -c devtools.c -o devtools.o
+gcc -shared -L/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/lib -L/usr/local/lib64 -o devtools.so devtools.o -L/sw/apps/R/x86_64/3.3.2/tintin/lib64/R/lib -lR
+installing to /pica/h1/nilsanli/R/x86_64-pc-linux-gnu-library/3.3/devtools/libs
+** R
+** inst
+** preparing package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded
+* DONE (devtools)
+
+The downloaded source packages are in
+	‘/scratch/12593347/RtmpUIQiYh/downloaded_packages’
+Loading required package: name
+Skipping install of 'IPO' from a github remote, the SHA1 (d1bd54ac) has not changed since last install.
+  Use `force = TRUE` to force installation
+Loading required package: name
+Warning messages:
+1: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘name’
+2: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘name’
+3: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘name’
+4: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘name’
+> 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+> library("IPO")
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+Loading required package: rsm
+Loading required package: CAMERA
+> 
+> #Set-up
+> slaves = 1 #Manually set number of slaves
+> setwd('/proj/p2013014/nobackup/nils_xjob/stef_batch/Obaid_mzml')
+> datapath <-"/proj/p2013014/nobackup/nils_xjob/stef_batch/Obaid_mzml"
+> datafiles <- list.files(datapath)
+> datafiles <- grep("Albenda|All_4_Pools", datafiles, perl=TRUE, value=TRUE)
+> print(paste('Found the file',datafiles, sep=" "))
+ [1] "Found the file Albendazole_B3_Rep1.mzML"
+ [2] "Found the file Albendazole_B3_Rep2.mzML"
+ [3] "Found the file Albendazole_B3_Rep3.mzML"
+ [4] "Found the file All_4_Pools_10.mzML"     
+ [5] "Found the file All_4_Pools_11.mzML"     
+ [6] "Found the file All_4_Pools_14.mzML"     
+ [7] "Found the file All_4_Pools_15.mzML"     
+ [8] "Found the file All_4_Pools_17.mzML"     
+ [9] "Found the file All_4_Pools_18.mzML"     
+[10] "Found the file All_4_Pools_2.mzML"      
+[11] "Found the file All_4_Pools_3.mzML"      
+[12] "Found the file All_4_Pools_6.mzML"      
+[13] "Found the file All_4_Pools_7.mzML"      
+> optfiles <- datafiles[4] #Manually set which files are for optimization
+> 
+> ptm <- proc.time() #start clock
+> 
+> #Parameter optimization
+> peakp_params <- getDefaultXcmsSetStartingParams("matchedFilter")
+> print(peakp_params)
+$fwhm
+[1] 25 35
+
+$snthresh
+[1]  3 17
+
+$step
+[1] 0.05 0.15
+
+$steps
+[1] 1 3
+
+$sigma
+[1] 0
+
+$max
+[1] 5
+
+$mzdiff
+[1] 0
+
+$index
+[1] FALSE
+
+$nSlaves
+[1] 1
+
+> peakp_params$ppm <- 5 #according to Orbitrap Exacto spec.
+> peakp_params$nSlaves <- 1 
+> res_peakp <- optimizeXcmsSet(files=optfiles,
++                              params=peakp_params,
++                              nSlaves = slaves,
++                              subdir = "optRes")
+
+
+
+starting new DoE with:
+fwhm: c(25, 35)
+snthresh: c(3, 17)
+step: c(0.05, 0.15)
+steps: c(1, 3)
+sigma: 0
+max: 5
+mzdiff: 0
+index: FALSE
+nSlaves: 1
+ppm: 5
+
+1
+154:527 179:1080 204:1725 229:2391 254:3119 279:3829 304:4635 329:5424 354:6236 379:7026 404:7772 429:8489 454:9217 479:9911 504:10599 529:11223 554:11854 579:12421 604:12999 629:13621 654:14102 679:14625 704:15127 729:15637 754:16143 779:16693 804:17135 829:17599 854:18079 879:18520 904:18665 
+2
+154:495 179:1017 204:1624 229:2253 254:2955 279:3627 304:4383 329:5134 354:5874 379:6606 404:7293 429:7957 454:8620 479:9241 504:9866 529:10404 554:11002 579:11507 604:12040 629:12614 654:13035 679:13497 704:13910 729:14390 754:14820 779:15333 804:15741 829:16180 854:16641 879:17055 904:17188 
+3
+154:198 179:383 204:593 229:815 254:1066 279:1302 304:1576 slurmstepd: error: *** JOB 12593347 ON ti1 CANCELLED AT 2017-02-13T14:49:17 DUE TO TIME LIMIT ***

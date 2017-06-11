@@ -1,0 +1,978 @@
+mod: loaded OpenMPI 1.4.5, compiled with gcc4.8 (found in /opt/openmpi/1.4.5gcc4.8/)
+
+R version 3.3.2 (2016-10-31) -- "Sincere Pumpkin Patch"
+Copyright (C) 2016 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> #Load packages
+> if(require("xcms")) {
++     print("xcms loaded correctly")
++ } else {
++     source("https://bioconductor.org/biocLite.R")
++     biocLite("xcms")
++     #install.packages("xcms")
++     if(require("xcms")) {
++         print("xcms installed and loaded")
++     } else {
++         stop("could not install xcms")
++     }
++ }
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+[1] "xcms loaded correctly"
+> if(require("BiocParallel")) {
++ } else {
++     source("https://bioconductor.org/biocLite.R")
++     biocLite("BiocParallel")
++     #install.packages("xcms")
++     if(require("BiocParallel")) {
++         print("BiocParallel installed and loaded")
++     } else {
++         stop("could not install BiocParallel")
++     }
++ }
+Loading required package: BiocParallel
+NULL
+> if(require("Rmpi")) {
++     print("Rmpi loaded correctly")
++ } else {
++     install.packages("Rmpi", repos="https://cloud.r-project.org/")
++     if(require("Rmpi")) {
++         print("Rmpi installed and loaded")
++     } else {
++         stop("could not install Rmpi")
++     }
++ }
+Loading required package: Rmpi
+[1] "Rmpi loaded correctly"
+> 
+> 
+> setwd('/proj/p2013014/nobackup/nils_xjob/stef_batch/Obaid_mzml')
+> cdfpath <-"/proj/p2013014/nobackup/nils_xjob/stef_batch/Obaid_mzml"
+> cdffiles <- list.files(cdfpath)
+> cdffiles <- grep("xset", cdffiles, perl=TRUE, value=TRUE)
+> print(paste('Found the file',cdffiles, sep=" "))
+[1] "Found the file xset_a.RData" "Found the file xset_b.RData"
+[3] "Found the file xset_c.RData" "Found the file xset_d.RData"
+[5] "Found the file xset_e.RData" "Found the file xset_f.RData"
+[7] "Found the file xset_g.RData" "Found the file xset_h.RData"
+> 
+> for(i in 1:length(cdffiles)) load(cdffiles[[i]]) 
+> 
+> xset <- c(xset_a, xset_b, xset_c, xset_d, xset_e, xset_f, xset_g, xset_h) #paste full dataset together 
+> p_param <- SnowParam(mpi.universe.size()-1, type="MPI");
+> register(p_param)
+> ptm <- proc.time()
+> xset <- group(xset, bw=30)
+192 255 317 380 442 505 567 630 692 755 817 880 
+> time <- proc.time()-ptm
+> print(paste('Took', time[3] , 'to group samples', sep= " "))
+[1] "Took 34.495 to group samples"
+> ptm <- proc.time()
+> xset <- retcor(xset)
+Retention Time Correction Groups: 504 
+> time <- proc.time()-ptm
+> print(paste('Took', time[3] , 'to retcor samples', sep= " "))
+[1] "Took 8.419 to retcor samples"
+> ptm <- proc.time()
+> xset <- group(xset, bw=10)
+192 255 317 380 442 505 567 630 692 755 817 880 
+> time <- proc.time()-ptm
+> print(paste('Took', time[3] , 'to group samples', sep= " "))
+[1] "Took 37.423 to group samples"
+> ptm <- proc.time()
+> xset <- fillPeaks(xset)
+	15 slaves are spawned successfully. 0 failed.
+--------------------------------------------------------------------------
+An MPI process has executed an operation involving a call to the
+"fork()" system call to create a child process.  Open MPI is currently
+operating in a condition that could result in memory corruption or
+other system errors; your MPI job may hang, crash, or produce silent
+data corruption.  The use of fork() (or system() or other calls that
+create child processes) is strongly discouraged.  
+
+The process that invoked fork was:
+
+  Local host:          ti152.uppmax.uu.se (PID 27738)
+  MPI_COMM_WORLD rank: 2
+
+If you are *absolutely sure* that your application will successfully
+and correctly survive a call to fork(), you may disable this warning
+by setting the mpi_warn_on_fork MCA parameter to 0.
+--------------------------------------------------------------------------
+[ti152.uppmax.uu.se:27712] 14 more processes have sent help message help-mpi-runtime.txt / mpi_init:warn-fork
+[ti152.uppmax.uu.se:27712] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B1_Rep1_151215123301.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B1_Rep1_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B1_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B1_Rep2_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B1_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B1_Rep3_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B1_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B2_Rep1_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B2_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B2_Rep2_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B2_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B2_Rep3_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B2_Rep3.mzML 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Diuron1-3_B1_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Diuron1-3_B1_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Erlotinib_B2_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Erlotinib_B2_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Erlotinib_B2_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Gefitinib_B3_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Gefitinib_B3_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Gefitinib_B3_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Genistein_B3_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Genistein_B3_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Genistein_B3_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Glyphosate_B2_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Glyphosate_B2_Rep2.mzML 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Quercetin_B1_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Rapamycin_B1_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Rapamycin_B1_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Rapamycin_B1_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Tamoxifen_B4_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Tamoxifen_B4_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Tamoxifen_B4_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch3_B3_1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch3_B3_12.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch3_B3_15.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch3_B3_16.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch3_B3_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch3_B3_4.mzML 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Octylmethoxycinnamate_B4_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Octylmethoxycinnamate_B4_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Octylmethoxycinnamate_B4_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Phthalate_B4_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Phthalate_B4_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Phthalate_B4_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch1_B1_11.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch1_B1_14.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch1_B1_15.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch1_B1_17.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch1_B1_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch1_B1_3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch1_B1_7.mzML 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/TrichostatinA_B2_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/TrichostatinA_B2_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Vinblastine_B1_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Vinblastine_B1_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Vinblastine_B1_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Vincristine_B2_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Vincristine_B2_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Vincristine_B2_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Vorinostat_B1_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Vorinostat_B1_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Vorinostat_B1_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Wortmannin_B4_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Wortmannin_B4_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Wortmannin_B4_Rep3.mzML 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Bortezomib_B1_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Chloroquine_B3_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Chloroquine_B3_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Chloroquine_B3_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B1_Rep1_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B1_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B1_Rep2_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B1_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B1_Rep3_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B1_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B2_Rep1_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B2_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B2_Rep2_2.mzML 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B2_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B2_Rep3_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B2_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B3_Rep1_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B3_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B3_Rep2_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B3_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B3_Rep3_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B3_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B4_Rep1_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B4_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B4_Rep2_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B4_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B4_Rep3_2.mzML 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Glyphosate_B2_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Hydrocortisone_B1_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Hydrocortisone_B1_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Hydrocortisone_B1_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Ibuprofen_B3_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Ibuprofen_B3_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Ibuprofen_B3_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Lapatinib_B4_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Lapatinib_B4_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Lapatinib_B4_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B1_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B1_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B1_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B2_Rep1_2.mzML 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Ancitabine_B4_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Ancitabine_B4_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Aspirin_B2_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Aspirin_B2_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Aspirin_B2_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Atrazine_B4_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Atrazine_B4_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Atrazine_B4_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BetaEstradiol_B1_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BetaEstradiol_B1_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BetaEstradiol_B1_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BisphenolA_B3_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BisphenolA_B3_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BisphenolA_B3_Rep3.mzML 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B4_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Daidzein_B4_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Daidzein_B4_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Daidzein_B4_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Dexamethasone_B3_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Dexamethasone_B3_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Dexamethasone_B3_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Diethylstilbestrol_B2_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Diethylstilbestrol_B2_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Diethylstilbestrol_B2_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Dimephentioate_B3_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Dimephentioate_B3_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Dimephentioate_B3_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Diuron1-3_B1_Rep1.mzML 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch1_B1_9.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch2_B2_1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch2_B2_12.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch2_B2_14.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch2_B2_16.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch2_B2_18.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch2_B2_3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch2_B2_4.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch2_B2_7.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Prednisolone_B2_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Prednisolone_B2_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Prednisolone_B2_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Quercetin_B1_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Quercetin_B1_Rep2.mzML 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch3_B3_5.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch3_B3_9.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch4_B4_10.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch4_B4_11.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch4_B4_15.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch4_B4_16.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch4_B4_18.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch4_B4_3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch4_B4_4.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch4_B4_5.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Thiram_B4_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Thiram_B4_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Thiram_B4_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/TrichostatinA_B2_Rep1.mzML 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B2_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B2_Rep2_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B2_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B2_Rep3_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B2_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B3_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B3_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B3_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B4_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B4_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B4_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/NVP-BEZ235_B3_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/NVP-BEZ235_B3_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/NVP-BEZ235_B3_Rep3.mzML 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B3_Rep1_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B3_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B3_Rep2_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B3_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B3_Rep3_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B3_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B4_Rep1_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B4_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B4_Rep2_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B4_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B4_Rep3_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/BLANK_B4_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Bortezomib_B1_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Bortezomib_B1_Rep2.mzML 
+Loading required package: xcms
+Loading required package: mzR
+Loading required package: Rcpp
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colnames, do.call,
+    duplicated, eval, evalq, Filter, Find, get, grep, grepl, intersect,
+    is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+    paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+    Reduce, rownames, sapply, setdiff, sort, table, tapply, union,
+    unique, unsplit, which, which.max, which.min
+
+Loading required package: ProtGenerics
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Albendazole_B3_Rep1.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Albendazole_B3_Rep2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Albendazole_B3_Rep3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/All_4_Pools_10.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/All_4_Pools_11.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/All_4_Pools_14.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/All_4_Pools_15.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/All_4_Pools_17.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/All_4_Pools_18.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/All_4_Pools_2.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/All_4_Pools_3.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/All_4_Pools_6.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/All_4_Pools_7.mzML 
+/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Ancitabine_B4_Rep1.mzML 
+There were 13 warnings (use warnings() to see them)
+There were 50 or more warnings (use warnings() to see the first 50)
+There were 50 or more warnings (use warnings() to see the first 50)
+There were 19 warnings (use warnings() to see them)
+Warning messages:
+1: In .local(object, ...) :There were 13 warnings (use warnings() to see them)
+There were 23 warnings (use warnings() to see them)
+There were 17 warnings (use warnings() to see them)
+There were 14 warnings (use warnings() to see them)
+Warning messages:
+1: In .local(object, ...) :Warning messages:
+There were 19 warnings (use warnings() to see them)
+
+  getPeaks: Peak  m/z:573.831883432526-573.83864449551,  RT:0.548143626238287-31.1880849434608is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B2_Rep2.mzML), using zero intensity value.
+
+There were 50 or more warnings (use warnings() to see the first 50)
+2: In .local(object, ...) :1: In .local(object, ...) :
+  getPeaks: Peak  m/z:181.902879247746-181.949999175975,  RT:0.866241792980279-31.9902836894485is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B3_Rep1_2.mzML), using zero intensity value.
+
+
+  getPeaks: Peak  m/z:181.902879247746-181.949999175975,  RT:0.866241792980279-31.9902836894485is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch1_B1_11.mzML), using zero intensity value.
+
+2: 3: In .local(object, ...) :In .local(object, ...) :
+  getPeaks: Peak  m/z:159.969054157142-159.969546304098,  RT:1.02997931410613-31.0540662239474is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B2_Rep1.mzML), using zero intensity value.
+
+2: In .local(object, ...) :
+  getPeaks: Peak  m/z:583.890898718764-583.895605266076,  RT:1282.97643570295-1321.42501333327is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch1_B1_17.mzML), using zero intensity value.
+
+3: In .local(object, ...) :
+  getPeaks: Peak  m/z:573.831883432526-573.83864449551,  RT:0.548143626238287-31.1880849434608is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B3_Rep1_2.mzML), using zero intensity value.
+
+4: In .local(object, ...) :
+  getPeaks: Peak  m/z:573.831883432526-573.83864449551,  RT:0.548143626238287-31.1880849434608is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B2_Rep1.mzML), using zero intensity value.
+
+3: In .local(object, ...) :
+  getPeaks: Peak  m/z:594.878828162191-594.947507548454,  RT:1275.43553860068-1320.27933045277is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch1_B1_17.mzML), using zero intensity value.
+
+4: In .local(object, ...) :
+  getPeaks: Peak  m/z:181.902879247746-181.949999175975,  RT:0.866241792980279-31.9902836894485is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B3_Rep1.mzML), using zero intensity value.
+
+5: In .local(object, ...) :
+  getPeaks: Peak  m/z:573.831883432526-573.83864449551,  RT:0.548143626238287-31.1880849434608is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/PoolBatch1_B1_2.mzML), using zero intensity value.
+
+
+  getPeaks: Peak  m/z:583.890898718764-583.895605266076,  RT:1282.97643570295-1321.42501333327is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B3_Rep3_2.mzML), using zero intensity value.
+
+6: In .local(object, ...) :
+  getPeaks: Peak  m/z:573.831883432526-573.83864449551,  RT:0.548143626238287-31.1880849434608is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B2_Rep2.mzML), using zero intensity value.
+
+4: In .local(object, ...) :
+  getPeaks: Peak  m/z:622.912853460559-622.947618560203,  RT:1285.60883333976-1321.55279781328is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B3_Rep3_2.mzML), using zero intensity value.
+
+
+  getPeaks: Peak  m/z:181.902879247746-181.949999175975,  RT:0.866241792980279-31.9902836894485is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B3_Rep1.mzML), using zero intensity value.
+
+7: In .local(object, ...) :5: In .local(object, ...) :
+  getPeaks: Peak  m/z:181.902879247746-181.949999175975,  RT:0.866241792980279-31.9902836894485is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B3_Rep3.mzML), using zero intensity value.
+
+8: In .local(object, ...) :
+  getPeaks: Peak  m/z:181.902879247746-181.949999175975,  RT:0.866241792980279-31.9902836894485is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B3_Rep2.mzML), using zero intensity value.
+
+6: In .local(object, ...) :
+  getPeaks: Peak  m/z:554.912039188696-554.939586525995,  RT:1275.90730231207-1319.09284507818is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B4_Rep3_2.mzML), using zero intensity value.
+
+9: In .local(object, ...) :
+  getPeaks: Peak  m/z:583.890898718764-583.895605266076,  RT:1282.97643570295-1321.42501333327is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B4_Rep3.mzML), using zero intensity value.
+
+7: In .local(object, ...) :
+  getPeaks: Peak  m/z:583.890898718764-583.895605266076,  RT:1282.97643570295-1321.42501333327is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B4_Rep3_2.mzML), using zero intensity value.
+
+
+  getPeaks: Peak  m/z:594.878828162191-594.947507548454,  RT:1275.43553860068-1320.27933045277is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B4_Rep3.mzML), using zero intensity value.
+
+10: In .local(object, ...) :8: In .local(object, ...) :
+  getPeaks: Peak  m/z:594.878828162191-594.947507548454,  RT:1275.43553860068-1320.27933045277is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Control_B4_Rep3_2.mzML), using zero intensity value.
+
+
+  getPeaks: Peak  m/z:622.912853460559-622.947618560203,  RT:1285.60883333976-1321.55279781328is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/Mebendazole_B4_Rep3.mzML), using zero intensity value.
+
+9: In .local(object, ...) :
+  getPeaks: Peak  m/z:583.890898718764-583.895605266076,  RT:1282.97643570295-1321.42501333327is out of retention time range for this sample (/pica/w1/p2013014_nobackup/nils_xjob/stef_batch/Obaid_mzml/NVP-BEZ235_B3_Rep3.mzML), using zero intensity value.
+
+There were 20 warnings (use warnings() to see them)
+There were 12 warnings (use warnings() to see them)
+> ptm <- proc.time()
+> time <- proc.time()-ptm
+> print(paste('Took', time[3] , 'to fillpeaks of samples', sep= " "))
+[1] "Took 0 to fillpeaks of samples"
+> save("xset",file="xset_proccessed.RData" )
+> 
+--------------------------------------------------------------------------
+mpirun has exited due to process rank 0 with PID 27713 on
+node ti152.uppmax.uu.se exiting without calling "finalize". This may
+have caused other processes in the application to be
+terminated by signals sent by mpirun (as reported here).
+--------------------------------------------------------------------------
