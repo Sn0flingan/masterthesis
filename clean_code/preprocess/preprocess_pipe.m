@@ -1,0 +1,99 @@
+%Add paths to functions
+addpath(genpath('functions'));
+
+%Load in feature extracted data
+data = loadXCMS();
+data = cleanData(data , dispFlag); %Make sure data is clean
+
+%%%%%%%%%%  Preprocessing Pipeline %%%%%%%%%
+%General parameters
+dispFlag = 1;
+
+%%% Log transformation
+Ilog = logIntensities(data.I, dispFlag); %perform log transformation
+data = struct('I', Ilog, 'sMeta', data.sMeta, 'fMeta', data.fMeta); %resave data
+data = cleanData(data , dispFlag);
+
+%%% Correction based on runorder
+%Parameters
+smoothingParam = 1e-4;
+
+Icor = data.I;
+%Exclude pools and blanks
+idxExcl = [findSampleIdx(data.sMeta, 'Pool');...
+    findSampleIdx(data.sMeta, 'BLANK')];
+idxIncl = setdiff(1:size(Icor,2), idxExcl);
+%Correct and resave
+Icor(:,idxIncl) = correctRunorderDecay_p(Icor(:,idxIncl),...
+            data.sMeta.runorder(idxIncl), smoothingParam, dispFlag); 
+data = struct('I', Icor, 'sMeta', data.sMeta, 'fMeta', data.fMeta);
+data = cleanData(data , dispFlag);
+
+%%% Normalize via Cyclic smoothing Splines
+%Parameters
+smoothingParam = 1e-4;
+
+Icor = data.I;
+idxExcl = [findSampleIdx(data.sMeta, 'Pool');...
+            findSampleIdx(data.sMeta, 'BLANK')];
+idxIncl = setdiff(1:size(Icor,2), idxExcl);
+Icor(:,idxIncl) = cyclicSmoothSpline_2(data.I(:,idxIncl), 0,...
+    smoothingParam, dispFlag);
+data = struct('I', Icor, 'sMeta', data.sMeta,...
+            'fMeta', data.fMeta);
+data = cleanData(data , dispFlag);
+
+%%% Subtract blank background noise
+Iclean = data.I;
+idxBlanks = [findSampleIdx(data.sMeta, 'BLANK')];
+idxSamples = setdiff([1:size(Iclean,2)], idxBlanks);
+Iclean(:,idxSamples) = blankSubtraction_2(data.I(:,idxSamples),...
+            data.I(:,idxBlanks), dispFlag);
+data = struct('I', Iclean, 'sMeta', data.sMeta,...
+            'fMeta', data.fMeta);
+data = cleanData(data , dispFlag);
+
+%%% Remove batch specific contaminants
+%Parameters
+lowerThreshold = 0.2;
+upperThreshold = 0.8;
+
+idxBlanks = [findSampleIdx(data.sMeta, 'BLANK')];
+dataTemp = removeIdx(data, idxBlanks, 'sample', 0);
+idxBatch1 = findSampleIdx(dataTemp.sMeta, 'B1');
+idxBatch2 = findSampleIdx(dataTemp.sMeta, 'B2');
+idxBatch3 = findSampleIdx(dataTemp.sMeta, 'B3');
+idxBatch4 = findSampleIdx(dataTemp.sMeta, 'B4');
+idxBatches = {idxBatch1, idxBatch2, idxBatch3, idxBatch4};
+idxCont = batchFilter(dataTemp.I, idxBatches, lowerThreshold,...
+    upperThreshold);
+data = removeIdx(data, idxCont, 'feature', dispFlag); %feature not effected by blank
+data = cleanData(data , dispFlag);
+
+%%% Remove outliers by total ion count(TIC)
+%Parameters
+numStd = 2;
+
+idxExcl = [findSampleIdx(data.sMeta, 'Pool');...
+        findSampleIdx(data.sMeta, 'BLANK')];
+idxIncl = setdiff(1:size(data.I,2), idxExcl);
+dataTemp = removeIdx(data, idxExcl, 'sample', 0);
+tIC = sum(dataTemp.I)'; %Sum all intensities/sample
+idxOutlier = find(abs(tIC-median(tIC))>medianStd(tIC)*numStd); %find samples outside x std
+disp(['Outlier TIC: Removing ' num2str(length(idxOutlier)) ' samples.'])
+data = removeIdx(data, idxIncl(idxOutlier), 'sample', dispFlag);
+data = cleanData(data , dispFlag);
+
+%%% Remove outliers by replicate simmilarity
+%Parameters
+minCorr = 0.7;
+%Extract replicate classes
+classNames = unique(data.sMeta.class(:));
+%Check correlation
+idxRm = [];
+for i=1:length(classNames)
+    idx = findSampleIdx(data.sMeta, classNames{i}); %Extract replicates
+    idxOutlier = corrFilter(data.I, idx, minCorr); %Find replicates with poor correlation
+    idxRm = [idxRm; idxOutlier]; %Add them to remove list
+end
+data = removeIdx(data, idxRm, 'sample', dispFlag);
